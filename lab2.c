@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <math.h>
 long long int fact (int g){
     long long int f=1;
     for (int j=g;j>0;j-=2){
