@@ -1,20 +1,43 @@
 #include "Generall.h"
-int main() {
-    ProcessList processList;//1. Инициализация объекта класса ProcessList.
+int main(int argc, char** argv)
+{
+    ProcessList processList; // 1. РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РѕР±СЉРµРєС‚Р° РєР»Р°СЃСЃР° ProcessList.
 
-    processList.insert({1, "ProcessA", Running, 10}); //2. Вставка нескольких процессов в список.
-    processList.insert({2, "ProcessB", Waiting, 20});
-    processList.insert({3, "ProcessC", Stopped, 30});
+    processList.insert({10, "ProcessA", Running}); // 2. Р’СЃС‚Р°РІРєР° РЅРµСЃРєРѕР»СЊРєРёС… РїСЂРѕС†РµСЃСЃРѕРІ РІ СЃРїРёСЃРѕРє.
+    processList.insert({1, "ProcessB", Waiting});
+    processList.insert({6, "ProcessC", Stopped});
+    processList.insert({4, "ProcessD", Running});
+    // processList.addRegisters(10, 123456);
+    // processList.addRegisters(10, 1234568);
+    
+    processList.printList(); // 3.  РџРµС‡Р°С‚СЊ СЃРїРёСЃРєР° РїРѕСЃР»Рµ РІСЃС‚Р°РІРѕРє РґР»СЏ РїСЂРѕРІРµСЂРєРё РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚Рё РґРѕР±Р°РІР»РµРЅРёСЏ.
+    cout << "- - - - - - - - - - - - - - - - ";
 
-    processList.printList(); //3.  Печать списка после вставок для проверки корректности добавления. 
+    processList.remove(6); // 4.  РЈРґР°Р»РµРЅРёРµ РѕРґРЅРѕРіРѕ РёР»Рё РЅРµСЃРєРѕР»СЊРєРёС… РїСЂРѕС†РµСЃСЃРѕРІ РёР· СЃРїРёСЃРєР°
+    cout << "\n\t\tAfter removing process with ID 6:\n";
+    processList.printList(); // 5. РџРµС‡Р°С‚СЊ СЃРїРёСЃРєР° РїРѕСЃР»Рµ СѓРґР°Р»РµРЅРёР№ РґР»СЏ РґРµРјРѕРЅСЃС‚СЂР°С†РёРё РёР·РјРµРЅРµРЅРёР№.
 
-    processList.remove(2); //4.  Удаление одного или нескольких процессов из списка
-    std::cout << "\nAfter removing process with ID 2:\n";
-    processList.printList();// 5. Печать списка после удалений для демонстрации изменений. 
+    cout << "- - - - - - - - - - - - - - - - ";
+    // 6.  Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ РїРѕРїС‹С‚РѕРє РІСЃС‚Р°РІРєРё СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… Рё СѓРґР°Р»РµРЅРёСЏ РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… СЌР»РµРјРµРЅС‚РѕРІ.
 
-    if (!processList.insert({2, "ProcessB", Waiting, 20})) //6.  Демонстрация попыток вставки существующих и удаления несуществующих элементов.
-        std::cout << "\nFailed to insert duplicate process ID 2.\n";
+    try
+    {
+        if (!processList.insert({10, "ProcessB", Waiting}))
+            throw(1);
+    }
+    catch (int t)
+    {
+        cout << "\n\t\tFailed to insert duplicate process ID \n";
+    }
+    try{
+        if (!processList.remove(50))
+        throw (1);
+    }
+    catch(int t){
+            cout << "\n\t\tThere is no such item in the list\n";
 
-    processList.printList();// 7. Финальный вывод списка: Печать конечного состояния списка. 
+    }
+    processList.printList(); // 7. Р¤РёРЅР°Р»СЊРЅС‹Р№ РІС‹РІРѕРґ СЃРїРёСЃРєР°: РџРµС‡Р°С‚СЊ РєРѕРЅРµС‡РЅРѕРіРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ СЃРїРёСЃРєР°.
+    cout << "- - - - - - - - - - - - - - - - ";
     return 0;
 }
