@@ -1,0 +1,406 @@
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <chrono>
+#include <thread>
+#include <windows.h>
+using namespace std;
+// Класс клиента
+class Client
+{
+public:
+    int id;
+    std::string requestType;
+    time_t timestamp;
+    Client() = default;
+    Client(int id, std::string requestType) : id(id), requestType(requestType)
+    {
+        timestamp = time(nullptr);
+    }
+};
+
+// Класс оператора
+class Operator
+{
+public:
+    int id;
+    bool isBusy;
+
+    Operator(int id) : id(id), isBusy(false) {}
+    Operator() = default;
+    void processRequest(Client client)
+    {
+        isBusy = true;
+        std::cout << "Operator " << id << " is processing client " << client.id << std::endl;
+        Sleep(2000);//имитация работы оператора, задержка экрана.
+        isBusy = false;
+        std::cout << "Operator " << id << " is finished processing client " << client.id << std::endl;
+    }
+
+    ~Operator() = default;
+};
+
+// Шаблонный класс для очереди (FIFO)
+template <typename T>
+class Queue
+{
+private:
+    T *data;
+    int front;
+    int rear;
+    int capacity;
+    int count;
+
+public:
+    Queue(int capacity) : capacity(capacity), front(0), rear(-1), count(0)
+    {
+        data = new T[capacity];
+    }
+
+    ~Queue()
+    {
+        delete[] data;
+    }
+
+    void enqueue(const T &item)
+    {
+        if (count == capacity)
+        {
+            T *newData = new T[capacity * 2];
+            for (int i = 0; i < count; ++i)
+            {
+                newData[i] = data[(front + i) % capacity];
+            }
+            delete[] data;
+            data = newData;
+            capacity *= 2;
+            front = 0;
+            rear = count - 1;
+        }
+        rear = (rear + 1) % capacity;
+        data[rear] = item;
+        count++;
+    }
+
+    T dequeue()
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Queue is empty");
+        }
+        T item = data[front];
+        front = (front + 1) % capacity;
+        count--;
+        return item;
+    }
+
+    bool isEmpty() const
+    {
+        return count == 0;
+    }
+    T peek() const
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Queue is empty");
+        }
+        return data[front];
+    }
+
+    int getCount() const { return count; }
+};
+
+// Шаблонный класс для двусторонней очереди (Deque)
+template <typename T>
+class Deque
+{
+private:
+    T *data;
+    int front;
+    int rear;
+    int capacity;
+    int count;
+
+public:
+    Deque(int capacity) : capacity(capacity), front(0), rear(-1), count(0)
+    {
+        data = new T[capacity];
+    }
+
+    ~Deque()
+    {
+        delete[] data;
+    }
+
+    void push_front(const T &item)
+    {
+        if (count == capacity)
+        {
+            T *newData = new T[capacity * 2];
+            for (int i = 0; i < count; ++i)
+            {
+                newData[i] = data[(front + i) % capacity];
+            }
+            delete[] data;
+            data = newData;
+            capacity *= 2;
+            rear = count - 1;
+        }
+
+        front = (front - 1 + capacity) % capacity;
+        data[front] = item;
+        count++;
+    }
+
+    void push_back(const T &item)
+    {
+        if (count == capacity)
+        {
+            T *newData = new T[capacity * 2];
+            for (int i = 0; i < count; ++i)
+            {
+                newData[i] = data[(front + i) % capacity];
+            }
+            delete[] data;
+            data = newData;
+            capacity *= 2;
+            front = 0;
+            rear = count - 1;
+        }
+
+        rear = (rear + 1) % capacity;
+        data[rear] = item;
+        count++;
+    }
+
+    T pop_front()
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Deque is empty");
+        }
+        T item = data[front];
+        front = (front + 1) % capacity;
+        count--;
+        return item;
+    }
+
+    T pop_back()
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Deque is empty");
+        }
+        T item = data[rear];
+        rear = (rear - 1 + capacity) % capacity;
+        count--;
+        return item;
+    }
+
+    bool isEmpty() const
+    {
+        return count == 0;
+    }
+    int getCount() const { return count; }
+    T peekFront() const
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Deque is empty");
+        }
+        return data[front];
+    }
+    T peekBack() const
+    {
+        if (count == 0)
+        {
+            throw std::runtime_error("Deque is empty");
+        }
+        return data[rear];
+    }
+};
+
+// Шаблонный класс для стека
+template <typename T>
+class Stack
+{
+private:
+    T *data;
+    int top;
+    int capacity;
+
+public:
+    Stack(int capacity) : capacity(capacity), top(-1)
+    {
+        data = new T[capacity];
+    }
+    ~Stack()
+    {
+        delete[] data;
+    }
+
+    void push(const T &item)
+    {
+        if (top + 1 == capacity)
+        {
+            T *newData = new T[capacity * 2];
+            for (int i = 0; i <= top; ++i)
+            {
+                newData[i] = data[i];
+            }
+            delete[] data;
+            data = newData;
+            capacity *= 2;
+        }
+
+        data[++top] = item;
+    }
+    T pop()
+    {
+        if (top == -1)
+        {
+            throw std::runtime_error("Stack is empty");
+        }
+        return data[top--];
+    }
+
+    bool isEmpty() const
+    {
+        return top == -1;
+    }
+    T peek() const
+    {
+        if (top == -1)
+        {
+            throw std::runtime_error("Stack is empty");
+        }
+        return data[top];
+    }
+    int getCount() const { return top + 1; }
+};
+
+// Класс BankSystem
+class BankSystem
+{
+public:
+    Deque<Client> highPriorityQueue;
+    Queue<Client> lowPriorityQueue;
+    Stack<Client> processedClientsStack;
+    Operator *operators;
+    int operatorsCount;
+
+    BankSystem(int capacity, int numOperators) : highPriorityQueue(capacity), lowPriorityQueue(capacity), processedClientsStack(capacity), operatorsCount(numOperators)
+    {
+        operators = new Operator[numOperators];
+        for (int i = 0; i < numOperators; ++i)
+        {
+            operators[i] = Operator(i + 1);
+        }
+    }
+
+    ~BankSystem()
+    {
+        delete[] operators;
+    }
+
+    void addClient(const Client &client)
+    {
+        if (client.requestType == "high")
+        {
+            highPriorityQueue.push_back(client);
+        }
+        else
+        {
+            lowPriorityQueue.enqueue(client);
+        }
+    }
+
+    void processRequests()
+    {
+        while (!highPriorityQueue.isEmpty() || !lowPriorityQueue.isEmpty())
+        {
+            Client client;
+            if (!highPriorityQueue.isEmpty())
+            {
+                client = highPriorityQueue.pop_front();
+            }
+            else
+            {
+                client = lowPriorityQueue.dequeue();
+            }
+
+            for (int i = 0; i < operatorsCount; i++)
+            {
+                if (!operators[i].isBusy)
+                {
+                    operators[i].processRequest(client);
+                    processedClientsStack.push(client);
+                    break;
+                }
+                else if (i == operatorsCount - 1)
+                {
+                    std::cout << "All operators are busy, please wait" << std::endl;
+                    if (!highPriorityQueue.isEmpty())
+                        highPriorityQueue.push_front(client);
+                    else
+                        lowPriorityQueue.enqueue(client);
+                }
+            }
+        }
+    }
+
+    void undoLastOperation()
+    {
+        if (!processedClientsStack.isEmpty())
+        {
+            Client client = processedClientsStack.pop();
+            std::cout << "Undo operation for client " << client.id << std::endl;
+            if (client.requestType == "high")
+                highPriorityQueue.push_back(client);
+            else
+                lowPriorityQueue.enqueue(client);
+        }
+        else
+        {
+            std::cout << "No operations to undo" << std::endl;
+        }
+    }
+
+    void displayQueues()
+    {
+        std::cout << "High Priority Queue count: " << highPriorityQueue.getCount() << std::endl;
+        std::cout << "Low Priority Queue count: " << lowPriorityQueue.getCount() << std::endl;
+    }
+
+    void displayHistory()
+    {
+        std::cout << "Processed clients stack count: " << processedClientsStack.getCount() << std::endl;
+    }
+};
+
+int main()
+{
+    BankSystem bank(5, 2);
+
+    Client client1(1, "high");
+    Client client2(2, "low");
+    Client client3(3, "high");
+    Client client4(4, "low");
+    Client client5(5, "low");
+
+    bank.addClient(client1);
+    bank.addClient(client2);
+    bank.addClient(client3);
+    bank.addClient(client4);
+    bank.addClient(client5);
+
+    bank.displayQueues();
+
+    bank.processRequests();
+    bank.displayHistory();
+
+    bank.undoLastOperation();
+    bank.displayHistory();
+    bank.displayQueues();
+    return 0;
+}
